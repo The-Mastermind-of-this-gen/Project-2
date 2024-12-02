@@ -10,7 +10,7 @@
 //Link to the Graphics .lib file
 #pragma comment(lib, "CC212SGL.lib")
 
-//Declare instance from the Graphics Library
+//Declare instance from the Graphics library lll
 CC212SGL gr;
 
 void waitFor(int start, int threshold)
