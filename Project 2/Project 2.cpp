@@ -13,7 +13,7 @@ int SCREEN_Y;
 //Link to the Graphics .lib file
 #pragma comment(lib, "CC212SGL.lib")
 
-//Declare instance from the Graphics Library
+//Declare instance from the Graphics 
 CC212SGL gr;
 
 //Enum for directions
