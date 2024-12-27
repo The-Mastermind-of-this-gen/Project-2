@@ -24,7 +24,7 @@ int bufferX, bufferY;
 //Declare instance from the Graphics 
 CC212SGL gr;
 //Enum for directions
-typedef enum { UP, DOWN, LEFT, RIGHT, NONE } Direction;
+typedef enum { UP, DOWN, LEFT, RIGHT, NONE,BD } Direction;
 
 void waitFor(int start, int threshold)
 {
@@ -36,6 +36,24 @@ void waitFor(int start, int threshold)
 	}
 }
 
+void P_C_F(int pac_x,int pac_y,int pacman_frames[6][4],int tile_size,int PCF,Direction* BD) {
+	if (*BD==UP) {
+		gr.drawImage(pacman_frames[PCF][1],pac_x,pac_y,gr.generateFromRGB(0,0,0));
+	}
+	if (*BD == RIGHT) {
+		gr.drawImage(pacman_frames[PCF][2], pac_x, pac_y, gr.generateFromRGB(0, 0, 0));
+	}
+	if (*BD == LEFT) {
+		gr.drawImage(pacman_frames[PCF][3], pac_x, pac_y, gr.generateFromRGB(0, 0, 0));
+	}
+	if (*BD == DOWN) {
+		gr.drawImage(pacman_frames[PCF][0], pac_x, pac_y, gr.generateFromRGB(0, 0, 0));
+	}
+	if (*BD == NONE) {
+			gr.drawImage(pacman_frames[PCF][0], pac_x, pac_y, gr.generateFromRGB(0, 0, 0));
+		}
+
+}
 void loading_screen(int tile_size) {
 	int loading = gr.loadImage("loading.png");
 
@@ -58,6 +76,7 @@ void loading_screen(int tile_size) {
 		// Time Control End
 		waitFor(frame_start, 1.0 / 30 * 1000);
 	}
+	//loading Frames
 }
 int main_menu(int tile_size) {
 	int frame_start = clock(); //Time Control Start
@@ -396,9 +415,12 @@ void inkyAI(int map[MR][MC])
 
 //void orangeAI()
 
+/*
+int pacman_animate() {
+	
 
-
-void map1draw(int map[MR][MC], int tile_size, int x, int y, int pac_x, int pac_y, int screenWidth, bool isAligned, int gridX, int gridY, int* pass, int* redGridX, int* redGridY, int* inkyGridX, int* inkyGridY) {
+}*/
+void map1draw(int map[MR][MC], int tile_size, int x, int y, int pac_x, int pac_y, int screenWidth, bool isAligned, int gridX, int gridY, int* pass, int* redGridX, int* redGridY, int* inkyGridX, int* inkyGridY,int pacman_frames[6][4],int PCF,Direction* BD) {
 	int s = tile_size - 2;
 	int food_eaten = 0;
 	*pass = *pass + 1;
@@ -557,8 +579,7 @@ void map1draw(int map[MR][MC], int tile_size, int x, int y, int pac_x, int pac_y
 			}
 			else if (map[i][j] == 99) {
 				// Draw Pac-Man
-				gr.setDrawingColor(COLORS::YELLOW);
-				gr.drawSolidCircle(pac_x + s, pac_y + s, tile_size - 2 * s);
+				P_C_F(pac_x+s-tile_size, pac_y+s-tile_size,pacman_frames,tile_size,PCF,BD);
 			}
 
 			if (isAligned && map[gridY][gridX] == map[i][j])
@@ -610,61 +631,137 @@ void map1draw(int map[MR][MC], int tile_size, int x, int y, int pac_x, int pac_y
 
 
 }
+//########################################### To show the Debugging Matrix #######################################
+void Debugging_matrix(int map[MR][MC],int *F3,bool* ON,int* SCREEN_X,int tile_size) {
+	*ON = !(*ON);//to see if the Debugging matrix is on
+	if (*F3 == 243 && *ON) {//F3 in the ascci Table is 243
+		*SCREEN_X = 50;
+		for (int yy = 0; yy < MR; yy++)
+		{
+			for (int xx = 0; xx < MC; xx++)
+			{
+				char buf[100];
+				sprintf(buf, "%d", map[yy][xx]);
+				gr.setFontSizeAndBoldness(15, 5);
+				gr.drawText(1250 + xx * 35, 100 + yy * 35, buf);
 
-void motion(Direction* bufferdir)
+			}
+		}
+	}
+	else if (!(*ON)) {
+		*SCREEN_X = (gr.getWindowWidth() + MC * tile_size) / 2 - gr.getWindowWidth() / 4;
+	}
+
+}
+
+//############################################ For Pacman motion ########################################
+
+void motion(Direction* bufferdir,Direction* BD,int map[MR][MC],int* F3,bool*ON,int *SCREEN_X,int tile_size)
 {
 	if (kbhit())
 	{
 		char c = getch();
-
 		// Only change direction if Pac-Man is moving
 		switch (c)
 		{
-		case 'w': *bufferdir = UP; break;
-		case 'a': *bufferdir = LEFT; break;
-		case 's': *bufferdir = DOWN; break;
-		case 'd': *bufferdir = RIGHT; break;
-		case 'W': *bufferdir = UP; break;
-		case 'A': *bufferdir = LEFT; break;
-		case 'S': *bufferdir = DOWN; break;
-		case 'D': *bufferdir = RIGHT; break;
+		case 'w': *bufferdir = UP;
+			*BD = UP;
+			break;
+		case 'a': *bufferdir = LEFT;
+			*BD = LEFT;
+			break;
+		case 's': *bufferdir = DOWN;
+			*BD = DOWN;
+			break;
+		case 'd': *bufferdir = RIGHT;
+			*BD = RIGHT;
+			break;
+		case 'W': *bufferdir = UP;
+			*BD = UP;
+			break;
+		case 'A': *bufferdir = LEFT;
+			*BD = LEFT;
+			break;
+		case 'S': *bufferdir = DOWN;
+			*BD = DOWN;
+			break;
+		case 'D': *bufferdir = RIGHT;
+			*BD = RIGHT;
+			break;
+		case 243:// TO show the Debugging matrix
+			Debugging_matrix(map,&*F3,&*ON,&*SCREEN_X,tile_size);
+			break;
 		}
 	}
 }
-
+//################################################# MAIN FUNCTION ################################################
 int main()
 {
 	gr.setup();
 	gr.setFullScreenMode();
 	gr.hideCursor(); // Hide the cursor. It's annoying
-
-
+	int pacman_frames[6][4];
+	int PCF = 0;
+	int tile_size = 50;
 
 	float redspeed = 0.0;
 	float inkyspeed = 0.0;
 	float cyanSpeed;
-	int tile_size = 50;
-
-
-	loading_screen(tile_size);
-	int c = main_menu(tile_size);
-	if (c == 2)
-		return 0;
 
 	int speed = tile_size;
 	int pass = 0;
 	int redGridX, redGridY;
 	int inkyGridX, inkyGridY;
-	
-	int game_over = gr.loadImage("Game over.png");
-	SCREEN_X = (gr.getWindowWidth() + MC * tile_size) / 2;
-	SCREEN_Y = 0;
 
-	SCREEN_X = 50;
+
+//#################################LOADING FRAMES AS FARMERS##################################################
+	pacman_frames[0][0]=gr.loadImage("Images//Pacman//D_Pacman0.png");
+	pacman_frames[1][0] = gr.loadImage("Images//Pacman//D_Pacman1.png");
+	pacman_frames[2][0] = gr.loadImage("Images//Pacman//D_Pacman2.png");
+	pacman_frames[3][0] = gr.loadImage("Images//Pacman//D_Pacman3.png");
+	pacman_frames[4][0] = gr.loadImage("Images//Pacman//D_Pacman4.png");
+	pacman_frames[5][0] = gr.loadImage("Images//Pacman//D_Pacman5.png");
+	//Pacman UP
+	pacman_frames[0][1] = gr.loadImage("Images//Pacman//U_Pacman0.png");
+	pacman_frames[1][1] = gr.loadImage("Images//Pacman//U_Pacman1.png");
+	pacman_frames[2][1] = gr.loadImage("Images//Pacman//U_Pacman2.png");
+	pacman_frames[3][1] = gr.loadImage("Images//Pacman//U_Pacman3.png");
+	pacman_frames[4][1] = gr.loadImage("Images//Pacman//U_Pacman4.png");
+	pacman_frames[5][1] = gr.loadImage("Images//Pacman//U_Pacman5.png");
+	//Pacman Right
+	pacman_frames[0][2] = gr.loadImage("Images//Pacman//R_Pacman0.png");
+	pacman_frames[1][2] = gr.loadImage("Images//Pacman//R_Pacman1.png");
+	pacman_frames[2][2] = gr.loadImage("Images//Pacman//R_Pacman2.png");
+	pacman_frames[3][2] = gr.loadImage("Images//Pacman//R_Pacman3.png");
+	pacman_frames[4][2] = gr.loadImage("Images//Pacman//R_Pacman4.png");
+	pacman_frames[5][2] = gr.loadImage("Images//Pacman//R_Pacman5.png");
+	//Paxman Left
+	pacman_frames[0][3] = gr.loadImage("Images//Pacman//L_Pacman0.png");
+	pacman_frames[1][3] = gr.loadImage("Images//Pacman//L_Pacman1.png");
+	pacman_frames[2][3] = gr.loadImage("Images//Pacman//L_Pacman2.png");
+	pacman_frames[3][3] = gr.loadImage("Images//Pacman//L_Pacman3.png");
+	pacman_frames[4][3] = gr.loadImage("Images//Pacman//L_Pacman4.png");
+	pacman_frames[5][3] = gr.loadImage("Images//Pacman//L_Pacman5.png");
+
+
+	//game over image
+	int game_over = gr.loadImage("Game over.png");
+//################################################ LOADING SCREEN ##########################################################
+	//loading_screen(tile_size);
+//################################################# MAIN MENU ##############################################	
+	// C is the choice 
+	int c = main_menu(tile_size);
+	//if the user choose exit the main function return zero
+	if (c == 2)
+		return 0;
+//###########################################################################################################
+
+	SCREEN_X = (gr.getWindowWidth() - MC * tile_size) - gr.getWindowWidth() / 4;
+	SCREEN_Y = 0;
 
 	Direction pacmanDir = NONE;
 	Direction bufferedDir = NONE;
-
+	Direction BD = RIGHT;
 	int map[MR][MC] = {
 		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 		{1,99,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1},
@@ -718,7 +815,6 @@ int main()
 
 		char str[200];
 
-
 		// Check for direction change
 		if (isAligned && bufferedDir != pacmanDir)
 		{
@@ -759,43 +855,23 @@ int main()
 		if (pacmanDir == RIGHT)
 			pac_x += speed;
 
-
-		/*if (eX == gridX && eY == gridY) {
-			return;
-			gameover();
-		}*/
-
-
-		// Rendering
+//##################################################### Rendering ###########################################
 		gr.beginDraw();
-
 		//draw map
-		map1draw(map, tile_size, x, y, pac_x, pac_y, screenWidth, isAligned, gridX, gridY, &pass, &redGridX, &redGridY, &inkyGridX, &inkyGridY);
-
+		PCF++;
+		if (PCF == 6)
+			PCF = 0;
+		map1draw(map, tile_size, x, y, pac_x, pac_y, screenWidth, isAligned, gridX, gridY, &pass, &redGridX, &redGridY, &inkyGridX, &inkyGridY,pacman_frames,PCF,&BD);
 		//game ending condition
 		if ((redGridX + 1 == gridY && redGridY + 1 == gridX) || (inkyGridX+1  == gridY && inkyGridY+1  == gridX)) {
 			gameover(game_over,tile_size);
-
 			break;
 		}
-
-
-		// Handle key press to change direction
-		motion(&bufferedDir);
-
-		//############################ we can use this to trace what is happening in the map ###########################
-		for (int yy = 0; yy < MR; yy++)
-		{
-			for (int xx = 0; xx < MC; xx++)
-			{
-				char buf[100];
-				sprintf(buf, "%d", map[yy][xx]);
-				gr.setFontSizeAndBoldness(15, 5);
-				gr.drawText(1250 + xx * 35, 100 + yy * 35, buf);
-
-			}
-		}
-
+//##################################### Handle key press to change direction of Pacman ######################################
+		int F3;
+		bool ON = false;
+		motion(&bufferedDir,&BD,map,&F3,&ON,&SCREEN_X,tile_size);
+//##################################### Controling the gosts speed  ######################################################
 		redspeed += 0.6f;
 		inkyspeed += 1.0f;
 		if (redspeed >= 1.0f) {
@@ -805,14 +881,10 @@ int main()
 		if (inkyspeed >= 1.0) {
 			inkyAI(map);
 			inkyspeed = 0;
-
 		}
-
-
-
+//####################################################################################################################
 		gr.endDraw();
-
-		// Time Control End
+//################################################# Time Control End #############################################
 		waitFor(frame_start, 1.0 / 30 * 1000);
 	}
 
